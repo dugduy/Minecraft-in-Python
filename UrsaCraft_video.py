@@ -1,4 +1,6 @@
 from ursina import *
+from json import load,dump
+# from ast import literal_eval
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 app = Ursina()
@@ -6,13 +8,16 @@ grass_texture = load_texture('assets/grass_block.png')
 stone_texture = load_texture('assets/stone_block.png')
 brick_texture = load_texture('assets/brick_block.png')
 dirt_texture  = load_texture('assets/dirt_block.png')
+texttures=(grass_texture,stone_texture,brick_texture,dirt_texture)
 sky_texture   = load_texture('assets/skybox.png')
 arm_texture   = load_texture('assets/arm_texture.png')
 punch_sound   = Audio('assets/punch_sound',loop = False, autoplay = False)
-block_pick = 1
+block_pick = 0
+# last_model=
+voxels=load(open('./checkpoint.json'))
 
-window.fps_counter.enabled = False
-window.exit_button.visible = False
+# window.fps_counter.enabled = False
+# window.exit_button.visible = False
 
 def update():
 	global block_pick
@@ -22,10 +27,10 @@ def update():
 	else:
 		hand.passive()
 
-	if held_keys['1']: block_pick = 1
-	if held_keys['2']: block_pick = 2
-	if held_keys['3']: block_pick = 3
-	if held_keys['4']: block_pick = 4
+	if held_keys['1']: block_pick = 0
+	if held_keys['2']: block_pick = 1
+	if held_keys['3']: block_pick = 2
+	if held_keys['4']: block_pick = 3
 
 class Voxel(Button):
 	def __init__(self, position = (0,0,0), texture = grass_texture):
@@ -42,13 +47,22 @@ class Voxel(Button):
 		if self.hovered:
 			if key == 'left mouse down':
 				punch_sound.play()
-				if block_pick == 1: voxel = Voxel(position = self.position + mouse.normal, texture = grass_texture)
-				if block_pick == 2: voxel = Voxel(position = self.position + mouse.normal, texture = stone_texture)
-				if block_pick == 3: voxel = Voxel(position = self.position + mouse.normal, texture = brick_texture)
-				if block_pick == 4: voxel = Voxel(position = self.position + mouse.normal, texture = dirt_texture)
+				# print(self.position)
+				voxel = Voxel(position = self.position + mouse.normal, texture = texttures[block_pick])
+				# print(voxel.position)
+				# if block_pick == 1: voxel = Voxel(position = self.position + mouse.normal, texture = grass_texture)
+				# if block_pick == 2: voxel = Voxel(position = self.position + mouse.normal, texture = stone_texture)
+				# if block_pick == 3: voxel = Voxel(position = self.position + mouse.normal, texture = brick_texture)
+				# if block_pick == 4: voxel = Voxel(position = self.position + mouse.normal, texture = dirt_texture)
+				voxels[str(self.position + mouse.normal).replace('Vec3','')]=block_pick
+				dump(voxels,open('./checkpoint.json','w'))
+				print(voxels)
 
 			if key == 'right mouse down':
 				punch_sound.play()
+				del voxels[str(self.position).replace('Vec3','')]
+				dump(voxels,open('./checkpoint.json','w'))
+				# print(self.position)
 				destroy(self)
 
 class Sky(Entity):
@@ -76,11 +90,15 @@ class Hand(Entity):
 	def passive(self):
 		self.position = Vec2(0.4,-0.6)
 
-for z in range(20):
-	for x in range(20):
-		voxel = Voxel(position = (x,0,z))
+# for z in range(10):
+# 	for x in range(10):
+# 		voxel = Voxel(position = (x,0,z))
+for z in voxels:
+	print(eval(z))
+	Voxel(eval(z),texttures[voxels[z]])
 
 player = FirstPersonController()
+player.position=(1,4,1)
 sky = Sky()
 hand = Hand()
 
