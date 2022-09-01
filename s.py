@@ -1,5 +1,8 @@
 from socket import socket
 from threading import Thread
+from json import load, dump
+
+voxels=load(open('./s_checkpoint.json'))
 
 s=socket()
 s.bind(('',60002))
@@ -17,8 +20,12 @@ def handle_a_client(c,addr):
     while 1:
         try:
             msg=c.recv(1024)
+            cmd=msg.decode().split(' ')
+            if cmd[0]=='add':
+                voxels[cmd[1].replace('Vec3','')]=cmd[2]
+                dump(voxels,open('./s_checkpoint.json','w'))
             pkg_count+=1
-            print(pkg_count,msg.decode())
+            print(pkg_count,cmd)
             boardcast(msg)
         except:
             clients.remove(c)

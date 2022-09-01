@@ -36,7 +36,7 @@ def update():
 class Voxel(Button):
 	def __init__(self, position = (0,0,0), texture = grass_texture):
 
-		s.send(('add '+str(position)+';').encode())
+		s.send(('add %s %s;'%(position,block_pick)).encode())
 		voxels.append(position)
 		super().__init__(
 			parent = scene,
