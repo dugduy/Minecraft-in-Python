@@ -1,6 +1,7 @@
 from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 from socket import socket
+# from ast import literal_eval
 
 s=socket()
 s.connect(('localhost',60002))
@@ -15,7 +16,7 @@ sky_texture   = load_texture('assets/skybox.png')
 arm_texture   = load_texture('assets/arm_texture.png')
 punch_sound   = Audio('assets/punch_sound',loop = False, autoplay = False)
 block_pick = 0
-voxels=[]
+# voxels=[]
 
 # window.fps_counter.enabled = False
 # window.exit_button.visible = False
@@ -36,8 +37,8 @@ def update():
 class Voxel(Button):
 	def __init__(self, position = (0,0,0), texture = grass_texture):
 
-		s.send(('add %s %s;'%(position,block_pick)).encode())
-		voxels.append(position)
+		# s.send(('add+%s+%s;'%(position,block_pick)).encode())
+		# voxels.append(position)
 		super().__init__(
 			parent = scene,
 			position = position,
@@ -58,12 +59,12 @@ class Voxel(Button):
 				# if block_pick == 2: voxel = Voxel(position = self.position + mouse.normal, texture = stone_texture)
 				# if block_pick == 3: voxel = Voxel(position = self.position + mouse.normal, texture = brick_texture)
 				# if block_pick == 4: voxel = Voxel(position = self.position + mouse.normal, texture = dirt_texture)
-				print(voxels)
+				# print(voxels)
 
 			if key == 'right mouse down':
 				punch_sound.play()
-				voxels.remove(self.position)
-				print(voxels)
+				# voxels.remove(self.position)
+				# print(voxels)
 				destroy(self)
 
 class Sky(Entity):
@@ -91,9 +92,19 @@ class Hand(Entity):
 	def passive(self):
 		self.position = Vec2(0.4,-0.6)
 
-for z in range(20):
-	for x in range(20):
-		voxel = Voxel(position = (x,0,z))
+# for z in range(20):
+# 	for x in range(20):
+# 		voxel = Voxel(position = (x,0,z))
+
+msg=s.recv(10240)
+cmds=msg.decode().split(';')
+for cmd in cmds:
+				cmd=cmd.split('+')
+				if cmd[0]=='add':
+					# voxels[cmd[1].replace('Vec3','')]=cmd[2]
+					Voxel(eval(cmd[1]),texttures[int(cmd[2])])
+					# dump(voxels,open('./s_checkpoint.json','w'))
+				print(cmd)
 
 player = FirstPersonController()
 sky = Sky()

@@ -16,17 +16,23 @@ def boardcast(msg):
 
 def handle_a_client(c,addr):
     global pkg_count
+    print('Sending checkpoint!')
+    for z in voxels:
+        c.send(('add+%s+%s;'%(z,voxels[z])).encode())
     print('Handling',addr)
     while 1:
         try:
             msg=c.recv(1024)
-            cmd=msg.decode().split(' ')
-            if cmd[0]=='add':
-                voxels[cmd[1].replace('Vec3','')]=cmd[2]
-                dump(voxels,open('./s_checkpoint.json','w'))
-            pkg_count+=1
-            print(pkg_count,cmd)
-            boardcast(msg)
+            cmds=msg.decode().split(';')
+            # print(cmds)
+            for cmd in cmds:
+                cmd=cmd.split('+')
+                if cmd[0]=='add':
+                    voxels[cmd[1].replace('Vec3','')]=cmd[2]
+                    dump(voxels,open('./s_checkpoint.json','w'))
+                pkg_count+=1
+                print(pkg_count,cmd)
+                boardcast(msg)
         except:
             clients.remove(c)
             c.close()
